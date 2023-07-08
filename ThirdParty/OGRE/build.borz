@@ -23,4 +23,5 @@ end
 local libPathAbs = path.getAbs("lib")
 local includeAbs = path.getAbs("include")
 
+addlic("OGRE", path.getAbs("COPYING"))
 _G["OGRE"] = createPkgDep({libPathAbs}, libs, {includeAbs}, {}, true)

@@ -1,3 +1,8 @@
+local licenes = {}
+function _G.addlic(projectName, path) 
+    licenes[projectName] = path
+end
+
 ws.Configs = {
     "debug",
     "release",
@@ -18,8 +23,22 @@ OnProjectCreate = function(prj)
         prj.AddDefine("TB_DIST")
         prj.Symbols = false
     end
-
 end
+
+OnPostCompile = function()
+    --Make a license.txt in the bin directory will ALL licenses
+    local finalLicense = io.open(path.getAbs("bin/license.txt"), "w")
+    for k,v in pairs(licenes) do
+        local lic = io.open(v, "r")
+        finalLicense:write("License for " .. k .. "\n")
+        finalLicense:write(lic:read("*a"))
+        finalLicense:write("\n\n")
+        lic:close()
+    end
+    finalLicense:close()
+end
+
+addlic("TugBoat", path.getAbs("LICENSE"))
 
 doborz("ThirdParty")
 doborz("Engine")
