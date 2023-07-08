@@ -7,6 +7,19 @@ local libs = {
     "OgreSceneFormat"
 }
 
+function error_handle()
+    log.fatal("Ogre not found!")
+    log.fatal("Please download ogre-next, compile and copy the needed libs and includes to the OGRE folder")
+end
+
+if not dir.exists("lib") then
+    error_handle()
+end
+
+if not dir.exists("include") then
+    error_handle()
+end
+
 local libPathAbs = path.getAbs("lib")
 local includeAbs = path.getAbs("include")
 
