@@ -1,0 +1,9 @@
+local plat = BuildConf.TargetPlatform
+
+if not dir.exists(plat) then
+    log.fatal("No platform folder for target platform: " .. tostring(plat))
+    return
+end
+
+-- Get the project from the lua file
+_G.Platform = doborz(tostring(plat))

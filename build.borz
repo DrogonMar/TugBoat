@@ -1,0 +1,30 @@
+ws.Configs = {
+    "debug",
+    "release",
+    "dist"
+}
+
+OnProjectCreate = function(prj)
+    log.info("Project created: " .. prj.Name)
+    if BuildConf.Config == "debug" then
+        prj.AddDefine("TB_DEBUG")
+        prj.Symbols = true
+    end
+    if BuildConf.Config == "release" then
+        prj.AddDefine("TB_RELEASE")
+        prj.Symbols = false
+    end
+    if BuildConf.Config == "dist" then
+        prj.AddDefine("TB_DIST")
+        prj.Symbols = false
+    end
+
+end
+
+doborz("ThirdParty")
+doborz("Engine")
+doborz("Platforms")
+
+log.info("Platform is: " .. Platform.Name)
+
+doborz("TestProj")

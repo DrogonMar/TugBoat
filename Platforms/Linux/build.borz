@@ -1,0 +1,5 @@
+local p_lin = project("platform_linux", Language.Cpp, BinType.SharedObj)
+p_lin.UsePIC = true
+p_lin.AddDep(TugBoat)
+p_lin.AddSourceGlob("Source/**.cpp")
+return p_lin

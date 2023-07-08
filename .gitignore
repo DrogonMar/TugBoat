@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+bin/
+bin-int/
+
+compile_commands.json
+*.sublime-project
+*.sublime-workspace
+*.cache
+discord.xml

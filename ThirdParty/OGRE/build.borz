@@ -1,0 +1,13 @@
+local libs = {
+    "OgreAtmosphere",
+    "OgreHlmsPbs",
+    "OgreHlmsUnlit",
+    "OgreMeshLodGenerator",
+    "OgreOverlay",
+    "OgreSceneFormat"
+}
+
+local libPathAbs = path.getAbs("lib")
+local includeAbs = path.getAbs("include")
+
+_G["OGRE"] = createPkgDep({libPathAbs}, libs, {includeAbs}, {}, true)
