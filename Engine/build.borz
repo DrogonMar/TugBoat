@@ -2,6 +2,6 @@ TugBoat = project("TugBoat", Language.Cpp, BinType.SharedObj)
 TugBoat.UsePIC = true
 TugBoat.AddSourceGlob("Source/**.cpp")
 TugBoat.AddIncludePath("Include", true)
-TugBoat.AddDep(OGRE, true)
+--TugBoat.AddDep(OGRE, true)
 
 _G.Engine = TugBoat

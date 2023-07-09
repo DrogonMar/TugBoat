@@ -14,7 +14,9 @@ public:
 	OS();
 	~OS();
 
+	//This is the path to the executable without the executable name
 	virtual std::string GetExePath() = 0;
+	//All the arguments passed to the executable not including the executable name
 	virtual std::vector<std::string> GetArgs() = 0;
 private:
 	LOG("OS");

@@ -1,3 +1,5 @@
+local opt = doborz("tempoptions.lua")
+
 local licenes = {}
 function _G.addlic(projectName, path) 
     licenes[projectName] = path
@@ -23,6 +25,7 @@ OnProjectCreate = function(prj)
         prj.AddDefine("TB_DIST")
         prj.Symbols = false
     end
+    prj.StaticStdLib = opt.staticComp
 end
 
 OnPostCompile = function()
@@ -40,7 +43,7 @@ end
 
 addlic("TugBoat", path.getAbs("LICENSE"))
 
-doborz("ThirdParty")
+--doborz("ThirdParty")
 doborz("Engine")
 doborz("Platforms")
 

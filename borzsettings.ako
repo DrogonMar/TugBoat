@@ -1,2 +1,3 @@
-paths.output "$WORKSPACEDIR/bin"
-paths.int    "$WORKSPACEDIR/bin-int/$PROJECTNAME"
+paths.output "$WORKSPACEDIR/bin/"
+paths.int    "$WORKSPACEDIR/bin-int/$TARGETPLATFORM/$CONFIG/$PROJECTNAME"
+project.output "$NAME-$TARGETPLATFORM-$CONFIG"
