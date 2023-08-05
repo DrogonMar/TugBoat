@@ -1,0 +1,6 @@
+local p_win = project("PlatformWindows", Language.Cpp, BinType.SharedObj)
+p_win.UsePIC = true
+p_win.AddDep(TugBoat)
+p_win.AddSourceGlob("Source/**.cpp")
+AddVulkan(p_win)
+return p_win

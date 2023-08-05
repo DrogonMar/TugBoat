@@ -1,0 +1,15 @@
+squirrel = project("squirrel", Language.Cpp, BinType.StaticLib)
+squirrel.UsePIC = true
+squirrel.AddIncludePath("squirrel/")
+squirrel.AddIncludePath("include/")
+squirrel.AddSourceGlob("squirrel/**.cpp")
+
+
+--now for the squirrel standard library
+squirrel_std = project("squirrel_std", Language.Cpp, BinType.StaticLib)
+squirrel_std.UsePIC = true
+squirrel_std.AddIncludePath("squirrel/", false)
+squirrel_std.AddIncludePath("include/", false)
+squirrel_std.AddSourceGlob("sqstdlib/**.cpp")
+
+addlic("Squirrel", path.getAbs("COPYRIGHT"))

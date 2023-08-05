@@ -3,6 +3,9 @@
 using namespace TugBoat;
 
 App::App(){
+	std::hash<std::string> hasher;
+	auto lo = hasher("App");
+
     m_Log << Info << "App Created";
 }
 

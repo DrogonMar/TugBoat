@@ -1,4 +1,5 @@
 #pragma once
+#include <TugBoat/Core.h>
 #include <iostream>
 #include <string>
 
@@ -68,11 +69,7 @@ public:
         *stream << std::endl;
 
         if (level == Fatal) {
-            // Ignore warnings
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wterminate"
-            throw std::runtime_error("Fatal error");
-#pragma GCC diagnostic pop
+			BREAK();
         }
     }
 
@@ -92,6 +89,22 @@ public:
         return *this;
     }
 
+	LogLine& operator<<(const int64_t& i)
+	{
+		if (level == Debug && !SHOW_DEBUG)
+			return *this;
+		*stream << i;
+		return *this;
+	}
+
+	LogLine& operator<<(const size_t& i)
+	{
+		if (level == Debug && !SHOW_DEBUG)
+			return *this;
+		*stream << i;
+		return *this;
+	}
+
     LogLine& operator<<(const int& i)
     {
         if (level == Debug && !SHOW_DEBUG)
@@ -99,6 +112,7 @@ public:
         *stream << i;
         return *this;
     }
+
 };
 
 struct Log {
@@ -110,7 +124,7 @@ public:
         this->className = className;
     }
 
-    LogLine operator<<(const Level& level)
+    LogLine operator<<(const Level& level) const
     {
         LogLine line(level);
         if (SEE_LEVEL) {
@@ -120,4 +134,8 @@ public:
         line << "[" << className << "] ";
         return line;
     }
+
+	void ChangeClassName(std::string newClassName){
+		this->className = std::move(newClassName);
+	}
 };

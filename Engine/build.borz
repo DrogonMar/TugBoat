@@ -1,7 +1,33 @@
+local binType = BinType.StaticLib
+if opt.engineShared then
+    binType = BinType.SharedObj
+    log.info("Building shared engine")
+end
+
 TugBoat = project("TugBoat", Language.Cpp, BinType.SharedObj)
 TugBoat.UsePIC = true
 TugBoat.AddSourceGlob("Source/**.cpp")
 TugBoat.AddIncludePath("Include", true)
---TugBoat.AddDep(OGRE, true)
+TugBoat.AddDep(squirrel)
+TugBoat.AddDep(squirrel_std)
+
+AddVulkan(TugBoat)
+
+
+if TugBoat.Type == BinType.SharedObj then
+    TugBoat.AddDefine("TB_BUILD_DLL")
+end
+
+--if BuildConf.TargetPlatform == Platform.Windows then
+--    --Windows already has directx
+--    TugBoat.AddLink("dxgi", true)
+--    TugBoat.AddLink("d3d11", true)
+--    TugBoat.AddLink("d3dcompiler", true)
+--else
+--    TugBoat.AddDep(pkgs["dxvk"], true)
+--    TugBoat.AddIncludePath("/usr/include/dxvk-native/native", true)
+--    TugBoat.AddIncludePath("/usr/include/dxvk-native/native/windows", true)
+--    TugBoat.AddIncludePath("/usr/include/dxvk-native/native/directx", true)
+--end
 
 _G.Engine = TugBoat

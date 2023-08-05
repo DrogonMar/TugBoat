@@ -6,4 +6,4 @@ if not dir.exists(plat) then
 end
 
 -- Get the project from the lua file
-_G.Platform = doborz(tostring(plat))
+_G.PlatformImpl = doborz(plat)

@@ -1,0 +1,6 @@
+local p_lin = project("PlatformLinux", Language.Cpp, BinType.SharedObj)
+p_lin.UsePIC = true
+p_lin.StdVersion = "gnu++17"
+p_lin.privDep(TugBoat)
+p_lin.AddSourceGlob("Source/**.cpp")
+return p_lin

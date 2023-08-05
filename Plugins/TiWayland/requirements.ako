@@ -1,0 +1,4 @@
+wlclient [
+    name "wayland-client"
+    req+
+]

@@ -1,0 +1,5 @@
+tisdl = project("TiSDL2", Language.Cpp, BinType.SharedObj)
+setPluginDefaults(tisdl)
+tisdl.AddSourceGlob("Source/**.cpp")
+tisdl.AddDep(Engine)
+tisdl.AddDep(pkgs["sdl2"])

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CLionExternalBuildManager">
+    <target id="5178e306-7b67-486d-b670-8cea8d3e1bed" name="Borz Windows Debug" defaultType="TOOL">
+      <configuration id="4be1dc19-4f0b-4342-a141-3a93602f8bcc" name="Borz Windows Debug">
+        <build type="TOOL">
+          <tool actionId="Tool_External Tools_Borz Windows Build" />
+        </build>
+        <clean type="TOOL">
+          <tool actionId="Tool_External Tools_Borz Windows Clean" />
+        </clean>
+      </configuration>
+    </target>
+    <target id="edb0bd85-a847-4fcd-96ed-342f8c5673ff" name="Borz Debug" defaultType="TOOL">
+      <configuration id="02bd7afc-cab8-4104-8095-5165c78143e3" name="Borz Debug">
+        <build type="TOOL">
+          <tool actionId="Tool_External Tools_Borz Build" />
+        </build>
+        <clean type="TOOL">
+          <tool actionId="Tool_External Tools_Borz Clean" />
+        </clean>
+      </configuration>
+    </target>
+  </component>
+</project>

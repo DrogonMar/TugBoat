@@ -1,0 +1,7 @@
+_G["setPluginDefaults"] = function(prj)
+    prj.OutputDirectory = prj.OutputDirectory .. "/Plugins"
+    prj.AddDep(Engine)
+    prj.UsePIC = true
+end
+
+doborz("TiWayland")

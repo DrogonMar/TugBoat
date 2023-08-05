@@ -1,4 +1,5 @@
-local opt = doborz("tempoptions.lua")
+pkgs = pkgconf.fromAko("requirements.ako")
+_G.opt = doborz("tempoptions.lua")
 
 local licenes = {}
 function _G.addlic(projectName, path) 
@@ -12,7 +13,6 @@ ws.Configs = {
 }
 
 OnProjectCreate = function(prj)
-    log.info("Project created: " .. prj.Name)
     if BuildConf.Config == "debug" then
         prj.AddDefine("TB_DEBUG")
         prj.Symbols = true
@@ -25,7 +25,26 @@ OnProjectCreate = function(prj)
         prj.AddDefine("TB_DIST")
         prj.Symbols = false
     end
+
+    if opt.engineShared then
+        prj.AddDefine("TB_DYNAMIC_LINK")
+    end
+
     prj.StaticStdLib = opt.staticComp
+
+    if BuildConf.TargetPlatform == Platform.Linux then
+        if opt.linuxWayland then
+            prj.AddDefine("TB_WAYLAND")
+        end
+        if opt.linuxX11 then
+            prj.AddDefine("TB_X11")
+        end
+    end
+
+    if prj.Type == BinType.StaticLib then
+        --Static libs don't need to be in the bin directory
+        prj.OutputDirectory = "$WORKSPACEDIR/bin-int/$TARGETPLATFORM/$CONFIG/$PROJECTNAME"
+    end
 end
 
 OnPostCompile = function()
@@ -39,14 +58,67 @@ OnPostCompile = function()
         lic:close()
     end
     finalLicense:close()
+
+    --Copy shaders folder to bin
+    if not dir.exists("shaders") then
+        log.fatal("Shaders directory not found")
+    end
+
+    local shaderDir = path.getAbs("shaders")
+    local targetDir = path.getAbs("bin/shaders")
+
+    dir.copy(shaderDir, targetDir)
+    dir.copy("scripts", "bin/scripts")
+end
+
+--Find vk sdk
+vk_sdk = util.conf_get(BuildConf.TargetPlatform, "vk_sdk")
+if vk_sdk == nil then
+    log.fatal("vk_sdk not defined in config.")
+end
+vk = {}
+if BuildConf.TargetPlatform == "windows" then
+    vk.bin = path.combine(vk_sdk, "Bin")
+    vk.include = path.combine(vk_sdk, "Include")
+    vk.lib = path.combine(vk_sdk, "Lib")
+    vk.libs = {"vulkan-1"}
+    vk.defines = {{"VK_USE_PLATFORM_WIN32_KHR", "1"}}
+else
+    vk.bin = path.combine(vk_sdk, "bin")
+    vk.include = path.combine(vk_sdk, "include")
+    vk.lib = path.combine(vk_sdk, "lib")
+    vk.libs = {"vulkan"}
+    vk.defines = {}
+end
+
+function _G.AddVulkan(prj)
+    prj.AddIncludePath(vk.include)
+    prj.AddLibraryPath(vk.lib)
+    prj.AddLinks(vk.libs)
+    --defines is a table that has elements that are tables where the first element is the define and the second is the value
+    for k,v in pairs(vk.defines) do
+        prj.AddDefine(v[1], v[2])
+    end
+end
+
+function _G.checkPlatform(supported_platforms)
+    --supported_platforms is an array of strings
+    for k,v in pairs(supported_platforms) do
+        if v == BuildConf.TargetPlatform then
+            return true
+        end
+        log.info(v)
+    end
+    return false
 end
 
 addlic("TugBoat", path.getAbs("LICENSE"))
 
---doborz("ThirdParty")
+doborz("ThirdParty")
 doborz("Engine")
 doborz("Platforms")
+doborz("Plugins")
 
-log.info("Platform is: " .. Platform.Name)
+log.info("Platform is: " .. PlatformImpl.Name)
 
 doborz("TestProj")

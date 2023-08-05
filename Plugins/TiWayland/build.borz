@@ -1,0 +1,35 @@
+local supported_platforms = {
+    "linux",
+    "bsd"
+}
+
+if not checkPlatform(supported_platforms) then
+    log.info("TiWayland is not supported on this platform")
+    return
+end
+
+protocols = {
+    {
+        "stable",
+        "xdg-shell",
+        "xdg-shell.xml"
+    },
+    {
+        "unstable",
+        "xdg-decoration",
+        "xdg-decoration-unstable-v1.xml"
+    }
+}
+
+wlpkgs = pkgconf.fromAko("requirements.ako")
+
+local protoBuilder = doborz("wayland-protocols.lua")
+
+tiwl = project("TiWayland", Language.Cpp, BinType.SharedObj)
+setPluginDefaults(tiwl)
+tiwl.AddSourceGlob("Source/**.cpp")
+tiwl.AddDep(Engine)
+tiwl.AddDep(wlpkgs["wlclient"])
+
+local protoProject = protoBuilder(protocols)
+tiwl.AddDep(protoProject)
