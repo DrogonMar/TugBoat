@@ -25,8 +25,7 @@ wlpkgs = pkgconf.fromAko("requirements.ako")
 
 local protoBuilder = doborz("wayland-protocols.lua")
 
-tiwl = project("TiWayland", Language.Cpp, BinType.SharedObj)
-setPluginDefaults(tiwl)
+tiwl = project("TiWayland", Language.Cpp, BinType.SharedObj, {"plugin"})
 tiwl.AddSourceGlob("Source/**.cpp")
 tiwl.AddDep(Engine)
 tiwl.AddDep(wlpkgs["wlclient"])

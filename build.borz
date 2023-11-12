@@ -46,6 +46,12 @@ OnProjectCreate = function(prj)
         --Static libs don't need to be in the bin directory
         prj.OutputDirectory = "$WORKSPACEDIR/bin-int/$TARGETPLATFORM/$CONFIG/$PROJECTNAME"
     end
+    
+    if prj.HasTag("plugin") then
+        prj.OutputDirectory = prj.OutputDirectory .. "/Plugins"
+        prj.AddDep(Engine)
+        prj.UsePIC = true
+    end
 end
 
 OnPostCompile = function()

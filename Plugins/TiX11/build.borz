@@ -10,8 +10,7 @@ end
 
 xpkgs = pkgconf.fromAko("requirements.ako")
 
-tix = project("TiX11", Language.Cpp, BinType.SharedObj)
-setPluginDefaults(tix)
+tix = project("TiX11", Language.Cpp, BinType.SharedObj, {"plugin"})
 tix.AddSourceGlob("Source/**.cpp")
 tix.AddDep(Engine)
 tix.AddDep(xpkgs["x11"])
