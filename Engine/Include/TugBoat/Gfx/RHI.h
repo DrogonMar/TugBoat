@@ -30,9 +30,11 @@ public:
 
 	//Gpu functions
 	uint32_t TB_API GetGpuCount();
-	Ref<Gpu> TB_API GetGpu(uint32_t index);
+	Gpu* TB_API GetGpu(uint32_t index);
 
 	VkInstance TB_API GetVkInstance() { return m_VkInstance; }
+
+	[[nodiscard]] uint32_t TB_API GetVkApiVersion() const { return VK_API_VERSION_1_3; }
 
 	static RHI TB_API *GetInstance()
 	{ return m_Instance; }
@@ -53,7 +55,9 @@ private:
 	bool m_UsingValidation = false;
 	std::vector<VkExtensionProperties> m_SupportedInstanceExtensions;
 	std::vector<VkLayerProperties> m_SupportedInstanceLayers;
-	std::vector<Ref<Gpu>> m_Gpus;
+	//Were not using Ref here since anything using it should stop by the time
+	//RHI shutdown is called, if not then something very wrong happened.
+	std::vector<Gpu*> m_Gpus;
 
 	//Vulkan
 	VkInstance m_VkInstance;

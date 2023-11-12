@@ -25,8 +25,8 @@ public:
 	std::vector<std::string> GetInstanceExtensions() const override;
 
 	BID CreateWindow(const std::string& title, UIVec size, WindowFlags flags) override;
-
 	void DestroyWindow(BID window) override;
+	void SetWindowTitle(BID window, const std::string& title) override;
 
 	void ProcessEvents() override;
 

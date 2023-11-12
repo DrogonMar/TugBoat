@@ -24,6 +24,8 @@ public:
 
 	std::string GetSharedLibraryExtension() override { return ".dll"; }
 
+	Optional<std::string> GetEnvVar(const std::string& name) override;
+
 	int AskSelection(const std::string& title, const std::string& bodyMessage, const std::vector<std::string>& options) override;
 	void ShowMessageBox(MessageBoxType type, const std::string& title, const std::string& message) override;
 private:

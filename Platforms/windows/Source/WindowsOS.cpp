@@ -155,3 +155,13 @@ void WindowsOS::ShowMessageBox(MessageBoxType type, const std::string &title, co
 
 	MessageBox(hwnd, message.c_str(), title.c_str(), uType);
 }
+
+Optional<std::string> WindowsOS::GetEnvVar(const std::string &name)
+{
+	char buffer[1024];
+	DWORD size = GetEnvironmentVariable(name.c_str(), buffer, 1024);
+	if (size == 0) {
+		return {};
+	}
+	return std::string(buffer);
+}

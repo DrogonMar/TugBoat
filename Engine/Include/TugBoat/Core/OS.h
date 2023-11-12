@@ -27,12 +27,15 @@ public:
 
 	virtual ulong GetTicksUsec() = 0;
 	virtual void SleepUsec(ulong usec) = 0;
+	virtual void SleepMsec(ulong msec) = 0;
 
 	virtual void* LoadSharedLibrary(const std::string& path) = 0;
 	virtual void UnloadSharedLibrary(void* handle) = 0;
 	virtual void* GetFunctionPointer(void* handle, const std::string& functionName) = 0;
 
 	virtual std::string GetSharedLibraryExtension() = 0;
+
+	virtual Optional<std::string> GetEnvVar(const std::string& name) = 0;
 
 	//Helper functions, not required to be implemented
 	[[maybe_unused]] virtual int AskSelection(const std::string& title, const std::string& bodyMessage, const std::vector<std::string>& options){

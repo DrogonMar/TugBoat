@@ -6,6 +6,11 @@
 using namespace TugBoat;
 
 struct WindowData{
+    //This is just so doing stuff in wayland liseners isnt annoying
+    BID id;
+    class WlWinBoat* boat;
+    
+    
 	struct wl_surface* surface;
 	struct xdg_surface* xdgSurface;
 	struct xdg_toplevel* xdgToplevel;
@@ -29,6 +34,7 @@ public:
 
 	BID CreateWindow(const std::string& title, UIVec size, WindowFlags flags) override;
 	UIVec GetWindowSize(BID window) override;
+	void SetWindowTitle(BID window, const std::string& title) override;
 
 	void DestroyWindow(BID window) override;
 

@@ -126,7 +126,19 @@ Gpu::~Gpu()
 	if(!m_Initialized)
 		return;
 
+	m_Log << Info << "Destroying Gpu";
 	vkDeviceWaitIdle(logicalDevice);
+
+	std::set<VkCommandBuffer> cmdBuffers;
+	cmdBuffers.insert(GraphicsCommandBuffer);
+	cmdBuffers.insert(PresentCommandBuffer);
+	cmdBuffers.insert(ComputeCommandBuffer);
+	cmdBuffers.insert(TransferCommandBuffer);
+	cmdBuffers.insert(SparseBindingCommandBuffer);
+	cmdBuffers.insert(VideoDecodeCommandBuffer);
+
+	for(auto buffer : cmdBuffers)
+		vkFreeCommandBuffers(logicalDevice, GraphicsCommandPool, 1, &buffer);
 
 	//Command pools could be the same for multiple queues
 	//so we need to make sure we only delete them once
@@ -141,6 +153,7 @@ Gpu::~Gpu()
 	for(auto pool : pools)
 		vkDestroyCommandPool(logicalDevice, pool, nullptr);
 
+	vmaDestroyAllocator(allocator);
 	vkDestroyDevice(logicalDevice, nullptr);
 }
 
@@ -368,6 +381,90 @@ void TB_API Gpu::Init(const Ref<Surface>& surface)
 		}
 	}
 
+	VmaAllocatorCreateInfo allocatorInfo = {};
+	allocatorInfo.physicalDevice = physicalDevice;
+	allocatorInfo.device = logicalDevice;
+	allocatorInfo.instance = RHI::GetInstance()->GetVkInstance();
+	allocatorInfo.vulkanApiVersion = RHI::GetInstance()->GetVkApiVersion();
+
+	if(vmaCreateAllocator(&allocatorInfo, &allocator) != VK_SUCCESS){
+		m_Log << Error << "Failed to create VMA allocator!";
+		return;
+	}
+
+	if(CanSupportGraphics()){
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = GraphicsCommandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
+
+		if(vkAllocateCommandBuffers(logicalDevice, &allocInfo, &GraphicsCommandBuffer) != VK_SUCCESS){
+			m_Log << Error << "Failed to allocate graphics command buffer!";
+			return;
+		}
+	}
+	if(CanSupportPresent()){
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = PresentCommandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
+
+		if(vkAllocateCommandBuffers(logicalDevice, &allocInfo, &PresentCommandBuffer) != VK_SUCCESS){
+			m_Log << Error << "Failed to allocate present command buffer!";
+			return;
+		}
+	}
+	if(CanSupportCompute()){
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = ComputeCommandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
+
+		if(vkAllocateCommandBuffers(logicalDevice, &allocInfo, &ComputeCommandBuffer) != VK_SUCCESS){
+			m_Log << Error << "Failed to allocate compute command buffer!";
+			return;
+		}
+	}
+	if(CanSupportTransfer()){
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = TransferCommandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
+
+		if(vkAllocateCommandBuffers(logicalDevice, &allocInfo, &TransferCommandBuffer) != VK_SUCCESS){
+			m_Log << Error << "Failed to allocate transfer command buffer!";
+			return;
+		}
+	}
+	if(CanSupportSparseBinding()){
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = SparseBindingCommandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
+
+		if(vkAllocateCommandBuffers(logicalDevice, &allocInfo, &SparseBindingCommandBuffer) != VK_SUCCESS){
+			m_Log << Error << "Failed to allocate sparse binding command buffer!";
+			return;
+		}
+	}
+	if(CanSupportVideoDecode()){
+		VkCommandBufferAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = VideoDecodeCommandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
+
+		if(vkAllocateCommandBuffers(logicalDevice, &allocInfo, &VideoDecodeCommandBuffer) != VK_SUCCESS){
+			m_Log << Error << "Failed to allocate video decode command buffer!";
+			return;
+		}
+	}
+
 
 	m_Initialized = true;
 }
@@ -458,4 +555,55 @@ void TB_API Gpu::WaitIdle() const
 bool TB_API Gpu::IsInitialized() const
 {
 	return m_Initialized;
+}
+
+VkFormat Gpu::ChooseSupportedFormat(const std::vector<VkFormat> &formats,
+									VkImageTiling tiling,
+									VkFormatFeatureFlags featureFlags)
+{
+	for(auto format : formats){
+		VkFormatProperties properties;
+		vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &properties);
+
+		if(tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & featureFlags) == featureFlags){
+			return format;
+		}else if (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & featureFlags) == featureFlags)
+		{
+			return format;
+		}
+	}
+
+	m_Log << Error << "Failed to find supported format!";
+	return VK_FORMAT_UNDEFINED;
+}
+bool Gpu::FindMemoryTypeIndex(uint32_t allowedTypes, VkMemoryPropertyFlags properties, uint32_t* output)
+{
+	// Get properties of physical device memory
+	VkPhysicalDeviceMemoryProperties memoryProperties;
+	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
+
+	for(uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++){
+		//allowed types is like 010010110001
+		//000000000001
+		//000000000010
+		//000000000100
+		//etc
+		//pretty much checking every type and if two ones interact then we go into the if statement
+		if((allowedTypes & (1 << i)) &&
+			(memoryProperties.memoryTypes[i].propertyFlags & properties) == properties) //desired property bit flags are part of memory types flags
+		{
+			*output = i;
+			return true;
+		}
+	}
+
+	m_Log << Error << "Failed to find suitable memory type!";
+	return false;
+}
+
+#include <TugBoat/Gfx/GSemaphore.h>
+
+Ref<GSemaphore> Gpu::CreateSemaphore()
+{
+	return CreateRef<GSemaphore>(this);
 }

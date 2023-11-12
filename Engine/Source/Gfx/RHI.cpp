@@ -85,7 +85,7 @@ void RHI::Init(bool useValidation)
 
 		//print devices
 		for(const auto& device : devices) {
-			auto gpu = CreateRef<Gpu>(device);
+			auto gpu = new Gpu(device);
 			if(gpu->IsValid())
 				m_Gpus.push_back(gpu);
 		}
@@ -94,12 +94,9 @@ void RHI::Init(bool useValidation)
 
 void RHI::Shutdown()
 {
-	for(auto& gpu : m_Gpus){
-		auto useCount = gpu.use_count();
-		if(useCount != 1)
-			m_Log << Warning << "Gpu " << gpu->GetInfo()->name << " is still in use!";
+	for (auto& gpu : m_Gpus) {
+		delete gpu;
 	}
-
 	m_Gpus.clear();
 
 	if(m_UsingValidation)
@@ -155,7 +152,7 @@ void RHI::CreateVkInstance()
 	auto eVers = ENGINE_VERSION;
 	appInfo.engineVersion = VK_MAKE_API_VERSION(0, eVers.major, eVers.minor, eVers.patch);
 	appInfo.pEngineName = ENGINE_NAME;
-	appInfo.apiVersion = VK_API_VERSION_1_2;
+	appInfo.apiVersion = GetVkApiVersion();
 
 	VkInstanceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -266,7 +263,7 @@ uint32_t RHI::GetGpuCount()
 	return static_cast<uint32_t>(m_Gpus.size());
 }
 
-Ref<Gpu> RHI::GetGpu(uint32_t index)
+Gpu* RHI::GetGpu(uint32_t index)
 {
 	return m_Gpus[index];
 }

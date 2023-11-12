@@ -9,6 +9,7 @@
 #include <wayland-client.hpp>
 #include <xdg-shell-client-protocol.h>
 #include <xdg-decoration-unstable-v1-client-protocol.h>
+#include "WlWinBoat.h"
 
 using namespace TugBoat;
 

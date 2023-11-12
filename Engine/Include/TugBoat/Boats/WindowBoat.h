@@ -1,6 +1,7 @@
 #pragma once
 #include <TugBoat/Core.h>
 #include <TugBoat/Boat.h>
+#include <TugBoat/Core/Event.h>
 #include <TugBoat/NativeWindow.h>
 #include <string>
 #include <vector>
@@ -29,12 +30,17 @@ public:
 	virtual void DestroyWindow(BID window){}
 	virtual UIVec GetWindowSize(BID window){ return {}; }
 	virtual VkSurfaceKHR GetSurface(BID window){ return {}; }
+	virtual void SetWindowTitle(BID window, const std::string& title) {}
 
 	virtual void ProcessEvents(){}
 
 	[[nodiscard]] virtual std::vector<std::string> GetInstanceExtensions() const;
 	[[nodiscard]] virtual NativeWindowHandle GetNativeWindowHandle(BID window) { return {}; }
 
-BOAT(WindowBoat);
+    //Events
+    //OnClose(BID WindowID)
+    Event<BID> OnClose;
+    
+	BOAT(WindowBoat);
 };
 }

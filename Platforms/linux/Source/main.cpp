@@ -8,6 +8,7 @@ using namespace TugBoat;
 int main(int argc, char** argv)
 {
 	LinuxOS os(argc, argv);
+	os.DetectKDE();
 
 	auto log = Log("LinuxMain");
 	log << Info << "Entering engine main";

@@ -69,10 +69,24 @@ void WinWinBoat::ProcessEvents(){
 	}
 }
 
+//make winproc
+LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
+	switch(uMsg){
+	case WM_CLOSE:
+		//show a message box with an ok button just saying that its un-handled
+		MessageBox(hwnd, "I can't send this event to the engine\nso your gonna need to do something else to close it.\n:3", "TugBoat", MB_OK);
+		return 0;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	}
+
+	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
 
 WinWinBoat::WinWinBoat(){
 	WNDCLASS wc = { };
-	wc.lpfnWndProc = DefWindowProc;
+	wc.lpfnWndProc = WinProc;
 	wc.hInstance = GetModuleHandle(nullptr);
 	wc.lpszClassName = CLASS_NAME;
 
@@ -111,5 +125,14 @@ VkSurfaceKHR WinWinBoat::GetSurface(BID window)
 	VkSurfaceKHR surface;
 	vkCreateWin32SurfaceKHR(RHI::GetInstance()->GetVkInstance(), &createInfo, nullptr, &surface);
 	return surface;
+}
+
+void WinWinBoat::SetWindowTitle(BID window, const std::string &title)
+{
+	auto it = m_Windows.find(window);
+	if(it == m_Windows.end()){
+		return;
+	}
+	SetWindowText(it->second->window, title.data());
 }
 

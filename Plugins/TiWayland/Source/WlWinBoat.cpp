@@ -8,7 +8,63 @@
 #include <vulkan/vulkan_wayland.h>
 #include <TugBoat/Core/AddShortTypes.h>
 
+#include "xdg-shell-client-protocol.h"
+
 #include <sys/poll.h>
+
+static void xdg_ping(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial){
+	xdg_wm_base_pong(xdg_wm_base, serial);
+	Log("Wayland") << Info << "PONG!";
+}
+
+const struct xdg_wm_base_listener boat_xdg_wm_listener = {
+	.ping = xdg_ping,
+};
+
+static void xdg_surface_configure(void* data, struct xdg_surface* xdg_surface, uint32_t serial){
+	auto self = (WindowData*)data;
+	xdg_surface_ack_configure(xdg_surface, serial);
+}
+const struct xdg_surface_listener boat_xdg_surface_listener = {
+	.configure = xdg_surface_configure,
+};
+
+static void xdg_toplevel_close(void *data, struct xdg_toplevel *xdg_toplevel){
+    auto self = (WindowData*)data;
+    Log("Wayland") << Info << "CLOSE!";
+    self->boat->OnClose.Invoke(self->id);
+}
+
+static void xdg_toplevel_configure(void *data,
+         struct xdg_toplevel *xdg_toplevel,
+         int32_t width,
+         int32_t height,
+         struct wl_array *states){
+    Log("Wayland") << Info << "CONFIG!";
+    auto self = (WindowData*)data;
+
+}
+static void xdg_toplevel_conf_bounds(void *data,
+                              struct xdg_toplevel *xdg_toplevel,
+                              int32_t width,
+                              int32_t height){
+
+    Log("Wayland") << Info << "CONFIG BOUNDS!";
+}
+
+static void xdg_toplevel_wm_caps(void *data,
+                          struct xdg_toplevel *xdg_toplevel,
+                          struct wl_array *capabilities){
+
+    Log("Wayland") << Info << "WM CAPS!";
+}
+
+const struct xdg_toplevel_listener boat_xdg_toplevel_listener = {
+        .configure = xdg_toplevel_configure,
+        .close = xdg_toplevel_close,
+        .configure_bounds = xdg_toplevel_conf_bounds,
+        .wm_capabilities = xdg_toplevel_wm_caps
+};
 
 WlWinBoat::WlWinBoat()
 {
@@ -40,7 +96,6 @@ BID WlWinBoat::CreateWindow(const std::string& title, UIVec size, WindowFlags fl
 		wl_surface_destroy(surface);
 		return INVALID_BID;
 	}
-
 	auto decor = zxdg_decoration_manager_v1_get_toplevel_decoration(TiWayland::GetDecorManager(), xdgTopLvl);
 	if(decor == nullptr){
 		m_Log << Error << "Failed to create surface decor";
@@ -50,26 +105,36 @@ BID WlWinBoat::CreateWindow(const std::string& title, UIVec size, WindowFlags fl
 		return INVALID_BID;
 	}
 
+    auto data = CreateRef<WindowData>();
+    data->boat = this;
+    data->surface = surface;
+    data->xdgSurface = xdgSurface;
+    data->xdgToplevel = xdgTopLvl;
+    data->decor = decor;
+    data->size = size;
+    
+	xdg_wm_base_add_listener(TiWayland::GetXdgWmBase(), &boat_xdg_wm_listener, nullptr);
+    xdg_surface_add_listener(xdgSurface, &boat_xdg_surface_listener, data.get());
+    xdg_toplevel_add_listener(xdgTopLvl, &boat_xdg_toplevel_listener, data.get());
+    
 	xdg_surface_set_window_geometry(xdgSurface, 0, 0, (int32_t)size.x, (int32_t)size.y);
 	xdg_toplevel_set_title(xdgTopLvl, title.c_str());
 
 	if(flags & WindowFlags_Resizable){
 		xdg_toplevel_set_min_size(xdgTopLvl, 20, 20);
 		xdg_toplevel_set_max_size(xdgTopLvl, INT32_MAX, INT32_MAX);
-	}
-
-	wl_surface_commit(surface);
-
-	auto data = CreateRef<WindowData>();
-	data->surface = surface;
-	data->xdgSurface = xdgSurface;
-	data->xdgToplevel = xdgTopLvl;
-	data->decor = decor;
-	data->size = size;
-
+	}else{
+		xdg_toplevel_set_min_size(xdgTopLvl, (int32_t)size.x, (int32_t)size.y);
+		xdg_toplevel_set_max_size(xdgTopLvl, (int32_t)size.x, (int32_t)size.y);
+	};
+    
 	auto id = CreateID();
+    data->id = id;
 	m_Windows[id] = data;
-
+    
+    zxdg_toplevel_decoration_v1_set_mode(decor, zxdg_toplevel_decoration_v1_mode::ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+    
+    wl_surface_commit(surface);
 	return id;
 }
 
@@ -159,4 +224,15 @@ VkSurfaceKHR WlWinBoat::GetSurface(BID window)
 	}
 
 	return surface;
+}
+void WlWinBoat::SetWindowTitle(BID window, const std::string &title)
+{
+	if(m_Windows.find(window) == m_Windows.end()){
+		m_Log << Error << "Failed to set window title: " << window << " does not exist";
+		return;
+	}
+
+	auto data = m_Windows.at(window);
+	xdg_toplevel_set_title(data->xdgToplevel, title.c_str());
+    wl_display_flush(TiWayland::GetDisplay());
 }

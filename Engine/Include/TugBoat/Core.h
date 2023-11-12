@@ -45,7 +45,7 @@ typedef int BID;
 #endif
 
 #if defined(TB_PLATFORM_LINUX) || defined(TB_PLATFORM_MACOS) || defined(TB_PLATFORM_ANDROID) || defined(TB_PLATFORM_WEB) || defined(TB_PLATFORM_3DS)
-#if TB_DYNAMIC_LINK
+#ifdef TB_DYNAMIC_LINK
 #ifdef TB_BUILD_DLL
 #define TB_API __attribute__((visibility("default")))
 #else
@@ -133,6 +133,9 @@ struct Version {
 	}
 };
 
+#define CLASS_DELETE_COPY(classname) classname (const classname&) = delete;
+#define CLASS_DELETE_SETTER(classname) classname& operator= (const classname&) = delete;
+
 template <typename T>
 using Scope = std::unique_ptr<T>;
 
@@ -150,4 +153,50 @@ constexpr Ref<T> CreateRef(Args&&... args)
 {
     return std::make_shared<T>(std::forward<Args>(args)...);
 }
+
+//class / struct called Optional<T>
+//has a bool that says if it has a value or not
+//has a T value
+
+template <typename T>
+struct Optional {
+	bool hasValue;
+	T value;
+
+	Optional() : hasValue(false), value(T()) {}
+
+	Optional(T value) : hasValue(true), value(value) {}
+
+	Optional& operator=(T value)
+	{
+		hasValue = true;
+		this->value = value;
+		return *this;
+	}
+
+	explicit operator bool() const
+	{
+		return hasValue;
+	}
+
+	T& operator*()
+	{
+		return value;
+	}
+
+	const T& operator*() const
+	{
+		return value;
+	}
+
+	T* operator->()
+	{
+		return &value;
+	}
+
+	const T* operator->() const
+	{
+		return &value;
+	}
+};
 }

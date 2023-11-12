@@ -12,7 +12,7 @@ namespace TugBoat
 {
 class TB_API Surface{
 public:
-	TB_API Surface(const Ref<class Gpu>& gpu, BID window);
+	TB_API Surface(class Gpu* gpu, BID window);
 	TB_API ~Surface();
 
 	[[nodiscard]] bool TB_API IsValid() const { return m_Surface != VK_NULL_HANDLE; }

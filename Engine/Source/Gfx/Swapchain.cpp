@@ -1,4 +1,5 @@
 #include <TugBoat/Gfx/Swapchain.h>
+#include <TugBoat/Gfx/GSemaphore.h>
 #include <limits>
 #include <TugBoat/Vectors.h>
 #include "TugBoat/Boats/WindowBoat.h"
@@ -63,7 +64,7 @@ VkExtent2D Internal_ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCapa
 	}
 }
 
-Swapchain::Swapchain(const Ref<Gpu>& gpu, const Ref<Surface>& surface)
+Swapchain::Swapchain(Gpu* gpu, const Ref<Surface>& surface)
 {
 	m_Gpu = gpu;
 	m_Surface = surface;
@@ -178,20 +179,88 @@ Swapchain::Swapchain(const Ref<Gpu>& gpu, const Ref<Surface>& surface)
 
 		m_ImageViews.push_back(imageView);
 	}
+
+	VkFenceCreateInfo fenceCreateInfo{};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	if(vkCreateFence(gpu->logicalDevice, &fenceCreateInfo, nullptr, &m_ImageAvailable) != VK_SUCCESS){
+		m_ImageAvailable = VK_NULL_HANDLE;
+		m_Log << Error << "Failed to create image available fence";
+		return;
+	}
+	//remember fence needs to be subbmited in SIGNALED state
+	vkResetFences(gpu->logicalDevice, 1, &m_ImageAvailable);
+
+	AcquireNextImage(VK_NULL_HANDLE, m_ImageAvailable);
+	vkWaitForFences(m_Gpu->logicalDevice, 1, &m_ImageAvailable, VK_TRUE, UINT64_MAX);
+	vkResetFences(m_Gpu->logicalDevice, 1, &m_ImageAvailable);
+
 }
+
 Swapchain::~Swapchain()
 {
 	m_Log << Info << "Destroying Swapchain";
 	m_Gpu->WaitIdle();
-
 
 	if(m_Swapchain != VK_NULL_HANDLE){
 		for(VkImageView imageView : m_ImageViews){
 			vkDestroyImageView(m_Gpu->logicalDevice, imageView, nullptr);
 		}
 
+		vkDestroyFence(m_Gpu->logicalDevice, m_ImageAvailable, nullptr);
+
 		vkDestroySwapchainKHR(m_Gpu->logicalDevice, m_Swapchain, nullptr);
 	}
 	m_Gpu = nullptr;
 	m_Surface = nullptr;
+}
+
+bool TB_API Swapchain::AcquireNextImage(VkSemaphore semaphore, VkFence fence)
+{
+	auto result = vkAcquireNextImageKHR(m_Gpu->logicalDevice, m_Swapchain, UINT64_MAX, semaphore, fence, &m_CurrentImageIndex);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		//recreate swapchain
+		m_Log << Info << "TODO: Recreate Swapchain";
+		return false;
+	}
+	else if (result != VK_SUCCESS) {
+		m_Log << Error << "Failed to acquire swapchain image";
+		return false;
+	}
+
+	return true;
+}
+
+bool TB_API Swapchain::AcquireNextImage(Ref<GSemaphore> semaphore, VkFence fence){
+	return AcquireNextImage(semaphore->GetVk(), fence);
+}
+
+bool TB_API Swapchain::Present(VkSemaphore semaphore)
+{
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = semaphore != VK_NULL_HANDLE ? 1 : 0;
+	presentInfo.pWaitSemaphores = &semaphore;
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &m_Swapchain;
+	presentInfo.pImageIndices = &m_CurrentImageIndex;
+
+	auto result = vkQueuePresentKHR(m_Gpu->PresentQueue, &presentInfo);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		//recreate swapchain
+		m_Log << Info << "TODO: Recreate Swapchain";
+		return false;
+	}
+	else if (result != VK_SUCCESS) {
+		m_Log << Error << "Failed to present swapchain image";
+		return false;
+	}
+
+	return true;
+}
+
+#include <TugBoat/Gfx/GSemaphore.h>
+bool TB_API Swapchain::Present(Ref<GSemaphore> semaphore){
+	return Present(semaphore->GetVk());
 }

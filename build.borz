@@ -6,6 +6,7 @@ function _G.addlic(projectName, path)
     licenes[projectName] = path
 end
 
+ws.Name = "TugBoat"
 ws.Configs = {
     "debug",
     "release",
@@ -49,15 +50,19 @@ end
 
 OnPostCompile = function()
     --Make a license.txt in the bin directory will ALL licenses
-    local finalLicense = io.open(path.getAbs("bin/license.txt"), "w")
-    for k,v in pairs(licenes) do
-        local lic = io.open(v, "r")
-        finalLicense:write("License for " .. k .. "\n")
-        finalLicense:write(lic:read("*a"))
-        finalLicense:write("\n\n")
-        lic:close()
+    local binPath = path.combine("bin", BuildConf.TargetPlatform, BuildConf.Config)
+    local licPath = path.combine(binPath, "license.txt")
+    if not file.exists(licPath) then
+        local finalLicense = io.open(licPath, "w")
+        for k,v in pairs(licenes) do
+            local lic = io.open(v, "r")
+            finalLicense:write("License for " .. k .. "\n")
+            finalLicense:write(lic:read("*a"))
+            finalLicense:write("\n\n")
+            lic:close()
+        end
+        finalLicense:close()
     end
-    finalLicense:close()
 
     --Copy shaders folder to bin
     if not dir.exists("shaders") then
@@ -65,10 +70,12 @@ OnPostCompile = function()
     end
 
     local shaderDir = path.getAbs("shaders")
-    local targetDir = path.getAbs("bin/shaders")
+    local targetDir = path.combine(binPath, "shaders")
 
     dir.copy(shaderDir, targetDir)
-    dir.copy("scripts", "bin/scripts")
+    
+    local scriptsDir = path.getAbs("scripts")
+    dir.copy(scriptsDir, path.combine(binPath, "scripts"))
 end
 
 --Find vk sdk

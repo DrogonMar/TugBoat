@@ -1,0 +1,17 @@
+local supported_platforms = {
+    "linux",
+    "bsd"
+}
+
+if not checkPlatform(supported_platforms) then
+    log.info("TiX11 is not supported on this platform")
+    return
+end
+
+xpkgs = pkgconf.fromAko("requirements.ako")
+
+tix = project("TiX11", Language.Cpp, BinType.SharedObj)
+setPluginDefaults(tix)
+tix.AddSourceGlob("Source/**.cpp")
+tix.AddDep(Engine)
+tix.AddDep(xpkgs["x11"])

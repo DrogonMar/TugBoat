@@ -5,3 +5,4 @@ _G["setPluginDefaults"] = function(prj)
 end
 
 doborz("TiWayland")
+doborz("TiX11")

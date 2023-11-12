@@ -25,6 +25,7 @@ void TiWayland::global_registry_handler(void *data,
 										uint32_t version)
 {
 	auto self = static_cast<TiWayland*>(data);
+	Log("Wayland") << Info << "Got interface " << interface << " with version " << version;
 
 	if(IS_INTERFACE(wl_compositor_interface)){
 		SET_INTERFACE(m_Compositor, wl_compositor);
@@ -72,7 +73,7 @@ void TiWayland::Init()
 	wl_registry_add_listener(m_Registry, &registry_listener, this);
 	wl_display_roundtrip(m_Display);
 
-	WindowBoat::Register("Wayland", CreateRef<WlWinBoat>());
+	WindowBoat::Register("Wayland", new WlWinBoat());
 }
 
 void TiWayland::Shutdown()

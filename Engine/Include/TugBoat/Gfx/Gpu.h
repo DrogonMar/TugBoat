@@ -7,6 +7,7 @@
 #include <TugBoat/Core/RemoveShortTypes.h>
 #include <vulkan/vulkan.hpp>
 #include <TugBoat/Core/AddShortTypes.h>
+#include <vma/vk_mem_alloc.h>
 #include "Surface.h"
 
 namespace TugBoat
@@ -33,6 +34,8 @@ class TB_API Gpu{
 public:
 	explicit TB_API Gpu(VkPhysicalDevice physicalDevice);
 	TB_API ~Gpu();
+	CLASS_DELETE_COPY(Gpu)
+	CLASS_DELETE_SETTER(Gpu)
 
 	void TB_API Init(const Ref<class Surface>& surface);
 
@@ -53,32 +56,47 @@ public:
 
 	void TB_API WaitIdle() const;
 
+	VkFormat ChooseSupportedFormat(const std::vector<VkFormat>& formats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags);
+	bool  FindMemoryTypeIndex(uint32_t allowedTypes, VkMemoryPropertyFlags properties, uint32_t* output);
+
 	int QueueGraphicsFamily = -1;
 	VkQueue GraphicsQueue = VK_NULL_HANDLE;
 	VkCommandPool GraphicsCommandPool = VK_NULL_HANDLE;
+	VkCommandBuffer GraphicsCommandBuffer = VK_NULL_HANDLE;
 
 	int QueuePresentFamily = -1;
 	VkQueue PresentQueue = VK_NULL_HANDLE;
 	VkCommandPool PresentCommandPool = VK_NULL_HANDLE;
+	VkCommandBuffer PresentCommandBuffer = VK_NULL_HANDLE;
 
 	int QueueComputeFamily = -1;
 	VkQueue ComputeQueue = VK_NULL_HANDLE;
 	VkCommandPool ComputeCommandPool = VK_NULL_HANDLE;
+	VkCommandBuffer ComputeCommandBuffer = VK_NULL_HANDLE;
 
 	int QueueTransferFamily = -1;
 	VkQueue TransferQueue = VK_NULL_HANDLE;
 	VkCommandPool TransferCommandPool = VK_NULL_HANDLE;
+	VkCommandBuffer TransferCommandBuffer = VK_NULL_HANDLE;
 
 	int QueueSparseBindingFamily = -1;
 	VkQueue SparseBindingQueue = VK_NULL_HANDLE;
 	VkCommandPool SparseBindingCommandPool = VK_NULL_HANDLE;
+	VkCommandBuffer SparseBindingCommandBuffer = VK_NULL_HANDLE;
 
 	int QueueVideoDecodeFamily = -1;
 	VkQueue VideoDecodeQueue = VK_NULL_HANDLE;
 	VkCommandPool VideoDecodeCommandPool = VK_NULL_HANDLE;
+	VkCommandBuffer VideoDecodeCommandBuffer = VK_NULL_HANDLE;
 
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 	VkDevice logicalDevice = VK_NULL_HANDLE;
+	VmaAllocator allocator = VK_NULL_HANDLE;
+
+	//Creation functions
+public:
+	Ref<class GSemaphore> CreateSemaphore();
+
 private:
 	Log m_Log = Log("Gpu");
 	bool valid = false;

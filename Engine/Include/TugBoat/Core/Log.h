@@ -23,29 +23,7 @@ enum Level {
 };
 
 // Make a function to convert level to string
-static const std::string& LevelToString(Level level)
-{
-    static const std::string DebugStr = "Debug";
-    static const std::string InfoStr = "Info";
-    static const std::string WarningStr = "Warning";
-    static const std::string ErrorStr = "Error";
-    static const std::string FatalStr = "Fatal";
-    static const std::string UnknownStr = "Unknown";
-
-    switch (level) {
-    case Debug:
-        return DebugStr;
-    case Info:
-        return InfoStr;
-    case Warning:
-        return WarningStr;
-    case Error:
-        return ErrorStr;
-    case Fatal:
-        return FatalStr;
-    }
-    return UnknownStr;
-}
+static const std::string& LevelToString(Level level);
 
 struct LogLine {
     std::ostream* stream;

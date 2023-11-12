@@ -6,7 +6,7 @@
 
 using namespace TugBoat;
 
-Surface::Surface(const Ref<Gpu> &gpu, BID window)
+Surface::Surface(Gpu* gpu, BID window)
 {
 	m_Window = window;
 	m_Surface = WindowBoat::Get()->GetSurface(window);

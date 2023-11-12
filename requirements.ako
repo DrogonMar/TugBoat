@@ -1,7 +1,3 @@
-dxvk [
-    name "dxvk-native-d3d11"
-    req+
-]
 sdl2 [
     req+
 ]
